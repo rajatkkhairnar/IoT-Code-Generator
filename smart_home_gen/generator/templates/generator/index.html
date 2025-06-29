@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Home Code Generator</title>
+  <!-- ...existing code... -->
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #e0e7ff 0%, #f0f2f5 100%);
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      transition: background 0.5s;
+    }
+    .container {
+      background: #fff;
+      border: none;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+      padding: 36px 30px;
+      max-width: 650px;
+      width: 100%;
+      animation: fadeIn 0.7s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(40px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    h1, h2 {
+      text-align: center;
+      margin-top: 0;
+      color: #2d3a5a;
+      letter-spacing: 1px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    fieldset {
+      border: none;
+      border-radius: 10px;
+      background: #f3f6fa;
+      padding: 18px 14px 14px 14px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 6px rgba(60,60,100,0.04);
+    }
+    legend {
+      font-weight: bold;
+      color: #6366f1;
+      padding: 0 6px;
+      font-size: 1.08em;
+    }
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 7px;
+      box-shadow: 0 1px 4px rgba(60,60,100,0.04);
+      opacity: 0;
+      transform: translateY(20px);
+      animation: rowIn 0.4s forwards;
+    }
+    @keyframes rowIn {
+      to { opacity: 1; transform: translateY(0);}
+    }
+    select, input[type="text"], input[type="password"], input[type="number"] {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      background: #f8fafc;
+      transition: border 0.2s, box-shadow 0.2s;
+      font-size: 1rem;
+    }
+    select:focus, input:focus {
+      border: 1.5px solid #6366f1;
+      outline: none;
+      background: #fff;
+      box-shadow: 0 0 0 2px #6366f133;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      font-family: 'Fira Mono', monospace;
+      font-size: 1rem;
+      background: #f8fafc;
+      margin-bottom: 10px;
+      resize: vertical;
+      transition: border 0.2s;
+    }
+    textarea:focus {
+      border: 1.5px solid #6366f1;
+      background: #fff;
+    }
+    button {
+      background: linear-gradient(90deg, #6366f1 60%, #60a5fa 100%);
+      color: #fff;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 1rem;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(99,102,241,0.08);
+    }
+    button:hover:not(.remove) {
+      background: linear-gradient(90deg, #4f46e5 60%, #2563eb 100%);
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 4px 16px rgba(99,102,241,0.13);
+    }
+    button.remove {
+      background: #f87171;
+      color: #fff;
+      padding: 0 13px;
+      font-size: 1.3rem;
+      border-radius: 50%;
+      transition: background 0.2s, transform 0.15s;
+      box-shadow: 0 1px 4px rgba(248,113,113,0.08);
+      margin-left: 2px;
+    }
+    button.remove:hover {
+      background: #dc2626;
+      transform: scale(1.15) rotate(-10deg);
+    }
+    #download {
+      display: inline-block;
+      animation: bounceIn 0.7s 0.2s both;
+      margin: 0 auto;
+      margin-bottom: 10px;
+      margin-top: 8px;
+    }
+    @keyframes bounceIn {
+      0% { opacity: 0; transform: scale(0.7);}
+      60% { opacity: 1; transform: scale(1.1);}
+      100% { opacity: 1; transform: scale(1);}
+    }
+  </style>
+
+</head>
+<body>
+  <div class="container">
+    <h1>Smart Home Code Generator</h1>
+    <form method="post">{% csrf_token %}
+      <fieldset>
+        <legend>Network & MQTT</legend>
+        <input type="text" name="ssid" placeholder="Wi-Fi SSID" required>
+        <input type="password" name="password" placeholder="Wi-Fi Password" required>
+        <input type="text" name="mqtt_host" placeholder="MQTT Host">
+        <input type="number" name="mqtt_port" placeholder="MQTT Port">
+        <input type="text" name="mqtt_topic" placeholder="MQTT Topic">
+      </fieldset>
+
+      <fieldset>
+        <legend>Sensors</legend>
+        <div id="sensors"></div>
+        <button type="button" id="add-sensor">+ Add Sensor</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Actuators</legend>
+        <div id="acts"></div>
+        <button type="button" id="add-act">+ Add Actuator</button>
+      </fieldset>
+
+      <button type="submit">Generate Code</button>
+    </form>
+
+    {% if script %}
+      <h2>Generated Script</h2>
+      <textarea readonly>{{ script }}</textarea>
+      <button id="download">Download Code</button>
+      <script>
+        document.getElementById('download').onclick = () => {
+          const code = document.querySelector('textarea').value;
+          const blob = new Blob([code], { type:'text/plain' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'smart_home.py';
+          a.click();
+        };
+      </script>
+    {% endif %}
+  </div>
+
+  <template id="sensor-row">
+    <div class="row">
+      <select name="sensor_type"><option>-- sensor --</option>{% for s in sensors %}<option>{{ s }}</option>{% endfor %}</select>
+      <select name="sensor_pin"><option>-- pin --</option>{% for p in pins %}<option>{{ p }}</option>{% endfor %}</select>
+      <input name="interval" type="number" placeholder="sec interval">
+      <button type="button" class="remove">−</button>
+    </div>
+  </template>
+
+  <template id="act-row">
+    <div class="row">
+      <select name="act_type"><option>-- actuator --</option>{% for a in actuators %}<option>{{ a }}</option>{% endfor %}</select>
+      <select name="act_pin"><option>-- pin --</option>{% for p in pins %}<option>{{ p }}</option>{% endfor %}</select>
+      <input name="trigger" placeholder="condition">
+      <button type="button" class="remove">−</button>
+    </div>
+  </template>
+
+ 
+<!-- ...existing code... -->
+  <script>
+    function setup(btnId, containerId, tplId) {
+      const btn = document.getElementById(btnId);
+      const cont = document.getElementById(containerId);
+      const tpl = document.getElementById(tplId).content;
+      btn.onclick = () => {
+        const c = document.importNode(tpl, true);
+        // Animate row in
+        const row = c.querySelector('.row');
+        row.style.animation = 'none';
+        void row.offsetWidth;
+        row.style.animation = null;
+        c.querySelector('.remove').onclick = e => {
+          // Animate out before removing
+          const el = e.target.parentNode;
+          el.style.transition = 'opacity 0.25s, transform 0.25s';
+          el.style.opacity = '0';
+          el.style.transform = 'translateX(40px)';
+          setTimeout(() => el.remove(), 250);
+        };
+        cont.appendChild(c);
+      };
+      btn.click();
+    }
+    setup('add-sensor','sensors','sensor-row');
+    setup('add-act','acts','act-row');
+
+    // Animate download button on click
+    const dlBtn = document.getElementById('download');
+    if (dlBtn) dlBtn.onclick = () => {
+      const code = document.querySelector('textarea').value;
+      const blob = new Blob([code], { type:'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'smart_home.py';
+      a.click();
+      dlBtn.style.transform = 'scale(0.93)';
+      setTimeout(() => dlBtn.style.transform = '', 120);
+    };
+  </script>
+<!-- ...existing code... -->
+</body>
+</html>
